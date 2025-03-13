@@ -98,12 +98,12 @@ class Motor:
 class MotorA(Motor):
     def __init__(self) -> None:
         # test_motor = Motor(14, 15, 13, 16, 17, 12)
-        direction1_pin = 6
-        direction2_pin = 7
-        power_pin = 5
+        direction1_pin = 13
+        direction2_pin = 14
+        power_pin = 15
         encoder1_pin = 26
-        encoder2_pin = 27
-        stby_pin = 14
+        encoder2_pin = 22
+        stby_pin = 12
         super().__init__(direction1_pin, direction2_pin, power_pin, encoder1_pin, encoder2_pin, stby_pin)
 
 
@@ -111,12 +111,12 @@ class MotorA(Motor):
 class MotorB(Motor):
     def __init__(self) -> None:
         # test_motor = Motor(14, 15, 13, 16, 17, 12)
-        direction1_pin = 3
-        direction2_pin = 2
-        power_pin = 4
-        encoder1_pin = 20
-        encoder2_pin = 21
-        stby_pin = 14
+        direction1_pin = 10
+        direction2_pin = 11
+        power_pin = 9
+        encoder1_pin = 21
+        encoder2_pin = 20
+        stby_pin = 12
         super().__init__(direction1_pin, direction2_pin, power_pin, encoder1_pin, encoder2_pin, stby_pin)
 
 
@@ -125,12 +125,12 @@ class MotorC(Motor):
 
     def __init__(self) -> None:
         # test_motor = Motor(14, 15, 13, 16, 17, 12)
-        direction1_pin = 13
-        direction2_pin = 12
-        power_pin = 11
-        encoder1_pin = 18
-        encoder2_pin = 19
-        stby_pin = 15
+        direction1_pin = 6
+        direction2_pin = 7
+        power_pin = 8
+        encoder1_pin = 19
+        encoder2_pin = 18
+        stby_pin = 5
         super().__init__(direction1_pin, direction2_pin, power_pin, encoder1_pin, encoder2_pin, stby_pin)
 
 
@@ -138,10 +138,10 @@ class MotorC(Motor):
 class MotorD(Motor):
     def __init__(self) -> None:
         # test_motor = Motor(14, 15, 13, 16, 17, 12)
-        direction1_pin = 8
-        direction2_pin = 9
-        power_pin = 10
-        encoder1_pin = 16
-        encoder2_pin = 17
+        direction1_pin = 3
+        direction2_pin = 4
+        power_pin = 2
+        encoder1_pin = 17
+        encoder2_pin = 16
         stby_pin = 15
         super().__init__(direction1_pin, direction2_pin, power_pin, encoder1_pin, encoder2_pin, stby_pin)
