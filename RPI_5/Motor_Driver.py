@@ -9,12 +9,12 @@ class MotorDriver:
         self.dataTimeOut = 5
         
         self.sport = serial.Serial(port, bod)
-        print(self.sport)
+        #print(self.sport)
 
     
     
     def sendData(self, messeg: str):
-        print("Sending:",messeg)
+        #print("Sending:",messeg)
         data=messeg.encode('UTF-8')
         self.sport.write(data)
         time.sleep(0.02)
@@ -22,32 +22,27 @@ class MotorDriver:
 
 
     def receiveData(self) -> str:
-        # Wait for data or time out
-        timeOut=time.time() + self.dataTimeOut
-        dataIn="Error_timeout"
+        timeOut = time.time() + self.dataTimeOut
+        dataIn = "Error_timeout"
         
-        while (time.time() < timeOut):
-            if(self.sport.in_waiting>0):
-                # There is data
-                #print("There is data waiting")
+        while time.time() < timeOut:
+            if self.sport.in_waiting > 0:
                 rawIn = bytearray()
-                while (self.sport.in_waiting > 0):
-                    # Read until line ending
+                while self.sport.in_waiting > 0:
                     rawIn += self.sport.read_until()
-                    #print('.',end='')
-                    
-                # Raw data is a byte stream, convert
-                # Need to use a try/except as control characters may cause an issue
                 try:
-                    dataIn = rawIn.decode('utf-8').strip()
-                    #print("  Incoming :", dataIn)
+                    decoded = rawIn.decode('utf-8').strip()
+                    if decoded:  # <--- Проверяем, что строка не пустая
+                        dataIn = decoded
+                    else:
+                        dataIn = "Error_empty"
                 except:
                     dataIn = "Error_decode"
-                # We got something, drop out of loop
-                #print("Data received")
                 break
-        # End of while loop, if a timeout then dataIn will be unchanged
+        
+        # print(f"Received: {dataIn}")  # <--- Логирование для диагностики
         return dataIn
+
 
 
 

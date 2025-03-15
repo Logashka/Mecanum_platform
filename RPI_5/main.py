@@ -6,7 +6,7 @@ from Motor_Driver import MotorDriver
 
 
 L = 220 / 2 / 1000
-K = 235 / 2 / 1000
+K = 220 / 2 / 1000
 B = 45
 WHEEL_DIAMETR = 78 / 1000
 MAX_SPEED = 2 * math.pi * 175 /  60 
@@ -81,40 +81,64 @@ def stop(type: bool):
     platform.stop("D", type)
     platform.stop("C", type)
 
-dela = input()
+# dela = input()
 platform.reverse("A", True, True)
 platform.reverse("D", True, True)
 
-def go(x, y, ang, time):
-    x_speed, y_speed = coords_to_linear(x, y, time)
-    m_speed = math.radians(ang) / time 
+
+def go(x: float, y: float, alpha: float, speed: float):
+    global platform, MAX_SPEED
+    
+    if speed < 0 or speed > 100:
+        raise ValueError("Speed must be between 0 and 100 percent")
+    
+    # Преобразуем скорость в радианы/сек
+    max_robot_speed = MAX_SPEED * (speed / 100) * WHEEL_DIAMETR * 1000 / 2
+    
+
+    # Вычисляем требуемые линейные скорости
+    distance = math.sqrt(x**2 + y**2)  # Евклидово расстояние до точки
+    move_time = distance / max_robot_speed if max_robot_speed > 0 else 1  # Время движения
+    print(f"move_time:{move_time}")
+    # Вычисляем скорости в локальной системе робота
+    x_speed = (x / move_time) / 1000
+    y_speed = (y / move_time) / 1000
+    m_speed = math.radians(alpha) / move_time  # Угловая скорость
+    
+    # Преобразуем в скорости колес
     wheel_speeds = linear_to_wheel(x_speed, y_speed, m_speed)
     percent_speeds = to_percent(wheel_speeds)
-
-    platform.start("ABCD", percent_speeds)
     
-    timem.sleep(time)
+    # Применяем ограничение по скорости
+    percent_speeds = [s * (speed / 100) for s in percent_speeds]
+    
+    # Сбрасываем счетчики энкодеров
+    platform.resetCount("A")
+    platform.resetCount("B")
+    platform.resetCount("C")
+    platform.resetCount("D")
+    
+    start_time = timem.time()
+    now_time = start_time
+    
+    kp = 0.1  # Коэффициент ПИД-регулятора
+    bar = 5
+
+    while now_time - start_time < move_time:
+        now_time = timem.time()
+        print(now_time - start_time)
+        # Целевые и реальные значения энкодеров
+        expected_count = [wheel_speeds[i] * (now_time - start_time) * 0.5 / math.pi * 360 for i in range(4)]
+        real_count = [platform.getCount(m) for m in "ABCD"]
+        
+        # Коррекция скорости
+        correction = [(expected_count[i] - real_count[i]) * kp / MAX_SPEED * 100 for i in range(4)]
+        correction = [max(min(c, bar), -bar) for c in correction]
+        print(real_count, correction)
+        platform.start("ABCD", [percent_speeds[i] + correction[i] for i in range(4)])
+        
+        timem.sleep(0.01)
+    
     stop(True)
     
-go(1000, 0, 0, 2)
-go(0, 1000, 0, 2)
-go(-1000, 0, 0, 2)
-go(0, -1000, 0, 2)
-
-while True:
-    stop(True)
-    x = int(input())
-    y = int(input())
-    ang = int(input())
-    time = float(input())
-
-    x_speed, y_speed = coords_to_linear(x, y, time)
-    m_speed = math.radians(ang) / time 
-    wheel_speeds = linear_to_wheel(x_speed, y_speed, m_speed)
-    percent_speeds = to_percent(wheel_speeds)
-
-    platform.start("ABCD", percent_speeds)
-    
-    timem.sleep(time)
-    stop(True)
-    print("OK")
+go(100,0,0,50)
