@@ -1,5 +1,5 @@
 from machine import Pin, PWM
-
+import machine
 class Motor:
 
     def __init__(self, direction1_pin: int, direction2_pin: int, power_pin: int, encoder1_pin: int, encoder2_pin: int, stby_pin: int) -> None:
@@ -26,6 +26,10 @@ class Motor:
         self.error = 0 
         self.encoder_delta = 1
 
+        self.dir_reverse_status = False
+        self.enc_reverse_status = False
+
+
     def Enc_Handler(self, Source):
         # Обработчик прерываний
         #s = str(Source)  #useful for debugging and setup to see which pin triggered interupt
@@ -41,25 +45,28 @@ class Motor:
             # 1 & 0 = CW rotation
             # 0 & 1 = CW rotation
             self.enc_counter += self.encoder_delta  #Increment counter by 1 - counts ALL transitions
-            self.qtr_cntr = round(self.enc_counter / 2)  #Calculate a new 1/4 counter value
+            self.qtr_cntr = round(self.enc_counter * 2)  #Calculate a new 1/4 counter value
         elif (enc1_state == 1 and self.enc2_state_old == 1) or (enc1_state == 0 and self.enc2_state_old == 0):
             # this will be counter-clockwise rotation
             # A   B-old
             # 1 & 1 = CCW rotation
             # 0 & 0 = CCW rotation
             self.enc_counter -= self.encoder_delta # Decrement counter by 1 - counts ALL transitions
-            self.qtr_cntr = round(self.enc_counter / 2)  #Calculate a new 1/4 counter value
+            self.qtr_cntr = round(self.enc_counter * 2)  #Calculate a new 1/4 counter value
         else:  #if here, there is a combination we don't care about, ignore it, but track it for debugging
             self.error += 1
         self.enc1_state_old = enc1_state     # store the current encoder values as old values to be used as comparison in the next loop
         self.enc2_state_old = enc2_state       
-
+        print(f"Enc_Handler: enc_counter={self.enc_counter}, qtr_cntr={self.qtr_cntr}")  # <--- Проверка данных
+    
     def reverse(self, move=False, encoder=False) -> None:
         # move=True инвертирует направление движения двигателя | encoder=True инвертирует направление энкодера
-        if move:
+        if move != self.dir_reverse_status:
             self.direction1_pin, self.direction2_pin = self.direction2_pin, self.direction1_pin        
-        if encoder:
+            self.dir_reverse_status = move
+        if encoder != self.enc_reverse_status:
             self.encoder_delta *= -1
+            self.enc_reverse_status = encoder
 
     def start(self, power: int) -> None:
         # запуск мотора в процентах мощности
@@ -84,7 +91,11 @@ class Motor:
         self.power_pin.duty_u16(0)
 
     def get_count(self) -> int:
-        return self.qtr_cntr
+        #irq_state = machine.disable_irq()  # Отключаем прерывания
+        count = self.enc_counter
+        #machine.enable_irq(irq_state)  # Включаем обратно
+        return count
+
     
     def reset_count(self) -> None:
         self.last_enc_counter = 0
@@ -143,5 +154,5 @@ class MotorD(Motor):
         power_pin = 2
         encoder1_pin = 17
         encoder2_pin = 16
-        stby_pin = 15
+        stby_pin = 5
         super().__init__(direction1_pin, direction2_pin, power_pin, encoder1_pin, encoder2_pin, stby_pin)
